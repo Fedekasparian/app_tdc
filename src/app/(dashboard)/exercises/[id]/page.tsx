@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Pencil, Clock, Dumbbell } from 'lucide-react'
 import { deleteExercise } from '@/lib/exercises/actions'
 import VideoPlayer from '@/components/exercises/VideoPlayer'
+import DeleteExerciseButton from '@/components/exercises/DeleteExerciseButton'
 
 const DIFFICULTY_LABEL: Record<string, string> = { low: 'Bajo', medium: 'Medio', high: 'Alto' }
 
@@ -57,17 +58,7 @@ export default async function ExerciseDetailPage({ params }: { params: Promise<{
         )}
       </div>
 
-      <form action={deleteAction}>
-        <button
-          type="submit"
-          className="w-full rounded-xl py-3 text-base font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
-          onClick={e => {
-            if (!confirm('¿Eliminar este ejercicio?')) e.preventDefault()
-          }}
-        >
-          Eliminar ejercicio
-        </button>
-      </form>
+      <DeleteExerciseButton action={deleteAction} />
     </div>
   )
 }
