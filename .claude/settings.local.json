@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npx create-next-app@latest . --typescript --eslint --tailwind --src-dir --app --turbopack --import-alias \"@/*\" --yes)",
+      "Bash(npx create-next-app@latest _tmp_setup --typescript --eslint --tailwind --src-dir --app --turbopack --import-alias \"@/*\" --yes)",
+      "Bash(npx create-next-app@latest app-tdc --typescript --eslint --tailwind --src-dir --app --turbopack --import-alias \"@/*\" --yes)",
+      "Bash(mv app-tdc/node_modules .)",
+      "Bash(mv app-tdc/package.json .)",
+      "Bash(mv app-tdc/package-lock.json .)",
+      "Bash(mv app-tdc/next.config.ts .)",
+      "Bash(mv app-tdc/tsconfig.json .)",
+      "Bash(npm install:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}
