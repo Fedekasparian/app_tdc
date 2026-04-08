@@ -13,7 +13,20 @@
       "Bash(npm install:*)",
       "Bash(npm audit:*)",
       "Bash(npm uninstall:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(where gh:*)",
+      "Bash(winget install:*)",
+      "Bash(gh auth:*)",
+      "Bash(gh issue create --title 'Módulo Alumnas: ABM \\(listado, alta, edición, baja lógica\\)' --body ':*)",
+      "Bash(gh issue create --title 'Módulo Ejercicios: ABM + filtros' --body ':*)",
+      "Bash(gh issue create --title 'Módulo Alumnas: import desde Excel' --body ':*)",
+      "Bash(gh issue create --title 'Módulo Ejercicios: reproducción de video \\(YouTube + archivo\\)' --body ':*)",
+      "Bash(gh issue create --title 'Módulo Clases: ABM + horario semanal + cupo + alumnas inscriptas' --body ':*)",
+      "Bash(gh issue create --title 'Módulo Clases: rutina base \\(seleccionar y ordenar ejercicios\\)' --body ':*)",
+      "Bash(gh issue create --title 'Módulo Sesiones: crear sesión desde clase + modificar rutina del día' --body ':*)",
+      "Bash(gh issue create --title 'Módulo Pagos: seguimiento mensual \\(pagó/no pagó + recargo configurable\\)' --body ':*)",
+      "Bash(gh issue create --title 'Módulo Pagos: alertas de morosas en dashboard' --body ':*)",
+      "Bash(gh issue create --title 'Módulo Reportes: reporte financiero + operativo + export PDF' --body ':*)"
     ]
   }
 }
