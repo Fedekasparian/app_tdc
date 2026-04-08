@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import type { Exercise } from '@/types'
 
 const CATEGORIES = ['movilidad', 'fuerza', 'cardio', 'elongación', 'core', 'equilibrio', 'otro']
@@ -20,6 +21,7 @@ type Props = {
 export default function ExerciseForm({ exercise, action }: Props) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState('')
   const [videoType, setVideoType] = useState<string>(exercise?.video_type ?? 'youtube')
   const router = useRouter()
 
@@ -27,7 +29,34 @@ export default function ExerciseForm({ exercise, action }: Props) {
     e.preventDefault()
     setLoading(true)
     setError('')
+
     const formData = new FormData(e.currentTarget)
+
+    // Si es upload, subir a Supabase Storage y reemplazar el file por la URL pública
+    if (videoType === 'upload') {
+      const file = (e.currentTarget.querySelector('input[name="video_file"]') as HTMLInputElement)?.files?.[0]
+      if (file) {
+        setUploadProgress('Subiendo video...')
+        const supabase = createClient()
+        const ext = file.name.split('.').pop()
+        const path = `exercises/${Date.now()}.${ext}`
+        const { error: uploadError } = await supabase.storage
+          .from('videos')
+          .upload(path, file, { upsert: true })
+
+        if (uploadError) {
+          setError('Error al subir el video. Intentá de nuevo.')
+          setLoading(false)
+          setUploadProgress('')
+          return
+        }
+
+        const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(path)
+        formData.set('video_url', publicUrl)
+        setUploadProgress('')
+      }
+    }
+
     const result = await action(formData)
     if (result?.error) {
       setError(result.error)
@@ -129,7 +158,7 @@ export default function ExerciseForm({ exercise, action }: Props) {
           />
         ) : (
           <input
-            name="video_url"
+            name="video_file"
             type="file"
             accept="video/*"
             className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -137,6 +166,7 @@ export default function ExerciseForm({ exercise, action }: Props) {
         )}
       </div>
 
+      {uploadProgress && <p className="text-blue-600 text-sm">{uploadProgress}</p>}
       {error && <p className="text-red-500 text-sm">{error}</p>}
 
       <div className="flex gap-3 pt-2">
@@ -152,7 +182,7 @@ export default function ExerciseForm({ exercise, action }: Props) {
           disabled={loading}
           className="flex-1 rounded-xl bg-blue-600 py-3 text-base font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
         >
-          {loading ? 'Guardando...' : 'Guardar'}
+          {uploadProgress || (loading ? 'Guardando...' : 'Guardar')}
         </button>
       </div>
     </form>
