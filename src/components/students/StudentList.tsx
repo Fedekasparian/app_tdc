@@ -86,8 +86,10 @@ export default function StudentList({ students }: Props) {
                     {student.full_name}
                   </p>
                   <p className="text-sm text-gray-400 truncate">
-                    {student.contact ?? 'Sin contacto'}
-                    {student.fee_amount ? ` · $${student.fee_amount.toLocaleString('es-AR')}` : ''}
+                    {[
+                      student.phone ?? student.email ?? student.contact,
+                      student.fee_amount ? `$${student.fee_amount.toLocaleString('es-AR')}` : null,
+                    ].filter(Boolean).join(' · ') || 'Sin contacto'}
                   </p>
                 </div>
               </div>

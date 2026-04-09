@@ -36,9 +36,19 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
       <div className="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
         <Row label="Estado" value={student.active ? '✓ Activa' : '✗ Inactiva'} />
         <Row label="Edad" value={student.age ? `${student.age} años` : '—'} />
-        <Row label="Contacto" value={student.contact ?? '—'} />
+        {student.birth_date && <Row label="Fecha de nac." value={new Date(student.birth_date + 'T12:00:00').toLocaleDateString('es-AR')} />}
+        {student.phone && <Row label="Teléfono" value={student.phone} />}
+        {student.email && <Row label="Email" value={student.email} />}
+        {student.emergency_phone && <Row label="Tel. urgencias" value={student.emergency_phone} />}
+        {student.address && <Row label="Dirección" value={student.address} />}
+        {student.profession && <Row label="Profesión" value={student.profession} />}
         <Row label="Cuota" value={student.fee_amount ? `$${Number(student.fee_amount).toLocaleString('es-AR')}` : '—'} />
         <Row label="Inicio" value={student.start_date ? new Date(student.start_date).toLocaleDateString('es-AR') : '—'} />
+        {student.health_conditions && <Row label="Salud" value={student.health_conditions} />}
+        {typeof student.image_authorization === 'boolean' && (
+          <Row label="Autoriza imágenes" value={student.image_authorization ? 'Sí' : 'No'} />
+        )}
+        {student.referral_source && <Row label="Cómo llegó" value={student.referral_source} />}
         {student.notes && <Row label="Observaciones" value={student.notes} />}
       </div>
 
