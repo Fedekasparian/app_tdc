@@ -2,18 +2,26 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import ExerciseLibrary from '@/components/exercises/ExerciseLibrary'
+import type { ExerciseCategory } from '@/types'
 
 export default async function ExercisesPage() {
   const supabase = await createClient()
 
-  const [{ data: exercises }, { data: topUsedRows }] = await Promise.all([
-    supabase.from('exercises').select('*').order('name', { ascending: true }),
-    supabase.rpc('get_top_exercises', { days_back: 30, limit_count: 10 }).select('*'),
+  const [{ data: rawExercises }, { data: categories }] = await Promise.all([
+    supabase
+      .from('exercises')
+      .select('*, exercise_category_map(exercise_categories(id, name, type))')
+      .order('name', { ascending: true }),
+    supabase.from('exercise_categories').select('*').order('type').order('name'),
   ])
 
-  // Fallback si el RPC no existe aún
-  const topUsedIds: string[] = (topUsedRows ?? []).map((r: { id: string }) => r.id)
-  const topUsed = (exercises ?? []).filter(e => topUsedIds.includes(e.id))
+  // Flatten nested join into a simple categories array per exercise
+  const exercises = (rawExercises ?? []).map(e => {
+    const cats = (e.exercise_category_map ?? [])
+      .map((m: { exercise_categories: ExerciseCategory | null }) => m.exercise_categories)
+      .filter(Boolean) as ExerciseCategory[]
+    return { ...e, categories: cats }
+  })
 
   return (
     <div className="space-y-4">
@@ -28,7 +36,7 @@ export default async function ExercisesPage() {
         </Link>
       </div>
 
-      <ExerciseLibrary exercises={exercises ?? []} topUsed={topUsed} />
+      <ExerciseLibrary exercises={exercises} categories={categories ?? []} />
     </div>
   )
 }

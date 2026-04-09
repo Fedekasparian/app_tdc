@@ -3,10 +3,17 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import type { Exercise } from '@/types'
+import type { Exercise, ExerciseCategory } from '@/types'
 
-const CATEGORIES = ['movilidad', 'fuerza', 'cardio', 'elongación', 'core', 'equilibrio', 'otro']
-const MUSCLE_GROUPS = ['hombros', 'tren inferior', 'tren superior', 'abdominales', 'espalda', 'glúteos', 'full body', 'otro']
+const TYPE_LABEL: Record<string, string> = {
+  body_part: 'Parte del cuerpo',
+  element:   'Elementos',
+  group:     'Grupales',
+  integral:  'Contenidos integrales',
+}
+
+const TYPE_ORDER = ['body_part', 'element', 'group', 'integral']
+
 const DIFFICULTIES = [
   { value: 'low', label: 'Bajo' },
   { value: 'medium', label: 'Medio' },
@@ -16,14 +23,30 @@ const DIFFICULTIES = [
 type Props = {
   exercise?: Exercise
   action: (formData: FormData) => Promise<{ error?: string } | undefined>
+  categories?: ExerciseCategory[]
+  selectedCategoryIds?: string[]
 }
 
-export default function ExerciseForm({ exercise, action }: Props) {
+export default function ExerciseForm({ exercise, action, categories = [], selectedCategoryIds = [] }: Props) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState('')
   const [videoType, setVideoType] = useState<string>(exercise?.video_type ?? 'youtube')
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(selectedCategoryIds))
   const router = useRouter()
+
+  const byType = TYPE_ORDER.reduce<Record<string, ExerciseCategory[]>>((acc, type) => {
+    acc[type] = categories.filter(c => c.type === type)
+    return acc
+  }, {})
+
+  function toggleCategory(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -31,8 +54,8 @@ export default function ExerciseForm({ exercise, action }: Props) {
     setError('')
 
     const formData = new FormData(e.currentTarget)
+    formData.set('category_ids', JSON.stringify([...selectedIds]))
 
-    // Si es upload, subir a Supabase Storage y reemplazar el file por la URL pública
     if (videoType === 'upload') {
       const file = (e.currentTarget.querySelector('input[name="video_file"]') as HTMLInputElement)?.files?.[0]
       if (file) {
@@ -78,57 +101,57 @@ export default function ExerciseForm({ exercise, action }: Props) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
-          <select
-            name="category"
-            defaultValue={exercise?.category ?? ''}
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-          >
-            <option value="">— Elegir —</option>
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+      {/* Categorías multi-selección */}
+      {categories.length > 0 && (
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700">Categorías</label>
+          {TYPE_ORDER.filter(t => byType[t]?.length > 0).map(type => (
+            <div key={type}>
+              <p className="text-xs text-gray-500 font-medium mb-1.5">{TYPE_LABEL[type]}</p>
+              <div className="flex flex-wrap gap-2">
+                {byType[type].map(cat => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => toggleCategory(cat.id)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      selectedIds.has(cat.id)
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
+      )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Grupo muscular</label>
-          <select
-            name="muscle_group"
-            defaultValue={exercise?.muscle_group ?? ''}
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-          >
-            <option value="">— Elegir —</option>
-            {MUSCLE_GROUPS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Duración (min)</label>
+        <input
+          name="estimated_duration"
+          type="number"
+          min="1"
+          max="120"
+          defaultValue={exercise?.estimated_duration ?? ''}
+          className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Ej: 10"
+        />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Duración (min)</label>
-          <input
-            name="estimated_duration"
-            type="number"
-            min="1"
-            max="120"
-            defaultValue={exercise?.estimated_duration ?? ''}
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Ej: 10"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Dificultad</label>
-          <select
-            name="difficulty"
-            defaultValue={exercise?.difficulty ?? ''}
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-          >
-            <option value="">— Elegir —</option>
-            {DIFFICULTIES.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
-          </select>
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Dificultad</label>
+        <select
+          name="difficulty"
+          defaultValue={exercise?.difficulty ?? ''}
+          className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+        >
+          <option value="">— Elegir —</option>
+          {DIFFICULTIES.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+        </select>
       </div>
 
       {/* Video */}
