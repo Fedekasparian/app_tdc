@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Search, ChevronRight, Clock, ChevronDown } from 'lucide-react'
+import { Search, ChevronRight, Clock, ChevronDown, Plus, Check } from 'lucide-react'
 import { filterByCategories } from '@/lib/exercises/filter'
+import { useCart } from '@/lib/cart/useCart'
 import type { Exercise, ExerciseCategory } from '@/types'
 
 const TYPE_LABEL: Record<string, string> = {
@@ -33,6 +34,8 @@ export default function ExerciseLibrary({ exercises, categories }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [openSections, setOpenSections] = useState<Set<string>>(new Set())
   const [difficulty, setDifficulty] = useState('')
+  const cart = useCart()
+  const cartIds = new Set(cart.items.map(i => i.id))
 
   const byType = TYPE_ORDER.reduce<Record<string, ExerciseCategory[]>>((acc, type) => {
     acc[type] = categories.filter(c => c.type === type)
@@ -150,38 +153,57 @@ export default function ExerciseLibrary({ exercises, categories }: Props) {
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map(exercise => (
-            <Link
-              key={exercise.id}
-              href={`/exercises/${exercise.id}`}
-              className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-3 hover:border-blue-300 transition-colors"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-gray-900 truncate">{exercise.name}</p>
-                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  {exercise.categories.slice(0, 3).map(cat => (
-                    <span key={cat.id} className="text-xs text-gray-500">{cat.name}</span>
-                  ))}
-                  {exercise.categories.length > 3 && (
-                    <span className="text-xs text-gray-400">+{exercise.categories.length - 3}</span>
-                  )}
-                  {exercise.estimated_duration && (
-                    <span className="text-xs text-gray-400 flex items-center gap-0.5">
-                      · <Clock size={11} /> {exercise.estimated_duration}min
+          {filtered.map(exercise => {
+            const inCart = cartIds.has(exercise.id)
+            return (
+              <div
+                key={exercise.id}
+                className="flex items-center gap-2 bg-white rounded-xl border border-gray-200 px-4 py-3 hover:border-blue-300 transition-colors"
+              >
+                {/* Botón +/✓ carrito */}
+                <button
+                  type="button"
+                  onClick={() => inCart ? cart.removeExercise(exercise.id) : cart.addExercise(exercise)}
+                  className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                    inCart
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-500 hover:bg-blue-50 hover:text-blue-600'
+                  }`}
+                >
+                  {inCart ? <Check size={15} /> : <Plus size={15} />}
+                </button>
+
+                {/* Info */}
+                <Link href={`/exercises/${exercise.id}`} className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate">{exercise.name}</p>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    {exercise.categories.slice(0, 3).map(cat => (
+                      <span key={cat.id} className="text-xs text-gray-500">{cat.name}</span>
+                    ))}
+                    {exercise.categories.length > 3 && (
+                      <span className="text-xs text-gray-400">+{exercise.categories.length - 3}</span>
+                    )}
+                    {exercise.estimated_duration && (
+                      <span className="text-xs text-gray-400 flex items-center gap-0.5">
+                        · <Clock size={11} /> {exercise.estimated_duration}min
+                      </span>
+                    )}
+                  </div>
+                </Link>
+
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {exercise.difficulty && (
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${DIFFICULTY_COLOR[exercise.difficulty] ?? ''}`}>
+                      {DIFFICULTY_LABEL[exercise.difficulty]}
                     </span>
                   )}
+                  <Link href={`/exercises/${exercise.id}`}>
+                    <ChevronRight size={18} className="text-gray-400" />
+                  </Link>
                 </div>
               </div>
-              <div className="flex items-center gap-2 ml-2 flex-shrink-0">
-                {exercise.difficulty && (
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${DIFFICULTY_COLOR[exercise.difficulty] ?? ''}`}>
-                    {DIFFICULTY_LABEL[exercise.difficulty]}
-                  </span>
-                )}
-                <ChevronRight size={18} className="text-gray-400" />
-              </div>
-            </Link>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

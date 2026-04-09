@@ -1,4 +1,4 @@
-type CartItem = {
+export type CartItem = {
   id: string
   name: string
   estimated_duration: number | null
