@@ -68,9 +68,40 @@ function parseCSVLine(line: string): string[] {
   return result
 }
 
+/**
+ * Splits CSV text into records respecting RFC 4180:
+ * newlines inside quoted fields are part of the value, not record separators.
+ */
+function splitCSVRecords(text: string): string[] {
+  const records: string[] = []
+  let current = ''
+  let inQuotes = false
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+    if (ch === '"') {
+      if (inQuotes && text[i + 1] === '"') {
+        current += '""'
+        i++
+      } else {
+        inQuotes = !inQuotes
+        current += ch
+      }
+    } else if ((ch === '\r' || ch === '\n') && !inQuotes) {
+      if (ch === '\r' && text[i + 1] === '\n') i++
+      if (current.trim() !== '') records.push(current)
+      current = ''
+    } else {
+      current += ch
+    }
+  }
+  if (current.trim() !== '') records.push(current)
+  return records
+}
+
 export function rowsFromCSV(buffer: Buffer): RawRow[] {
   const text = stripBOM(buffer.toString('utf-8'))
-  const lines = text.split(/\r?\n/).filter(l => l.trim() !== '')
+  const lines = splitCSVRecords(text)
   if (lines.length < 2) return []
 
   const rawHeaders = parseCSVLine(lines[0])

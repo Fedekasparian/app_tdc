@@ -88,4 +88,27 @@ García Lucía,1990-03-15`
     const rows = rowsFromCSV(buffer)
     expect(rows[0].birth_date).toBe('1990-03-15')
   })
+
+  it('fields after a multiline quoted field remain correctly aligned', () => {
+    // Reproduces the exact production bug:
+    // health_conditions with embedded newline caused birth_date to receive "operación mamaria,No,Si"
+    const csv =
+      'APELLIDO Y NOMBRE,¿Padece alguna enfermedad?,FECHA DE NACIMIENTO\n' +
+      'García Lucía,"operación mamaria\ncorrección",15/03/1990'
+    const buffer = Buffer.from(csv, 'utf-8')
+    const rows = rowsFromCSV(buffer)
+    expect(rows[0].health_conditions).toBe('operación mamaria\ncorrección')
+    expect(rows[0].birth_date).toBe('1990-03-15')
+  })
+
+  it('does not split a record when a quoted field contains a newline', () => {
+    const csv = 'APELLIDO Y NOMBRE,¿Padece alguna enfermedad?\n' +
+      'García Lucía,"operación mamaria\ncorrección"\n' +
+      'López María,No'
+    const buffer = Buffer.from(csv, 'utf-8')
+    const rows = rowsFromCSV(buffer)
+    expect(rows).toHaveLength(2)
+    expect(rows[0].full_name).toBe('García Lucía')
+    expect(rows[1].full_name).toBe('López María')
+  })
 })
