@@ -27,7 +27,9 @@
       "Bash(gh issue create --title 'Módulo Pagos: seguimiento mensual \\(pagó/no pagó + recargo configurable\\)' --body ':*)",
       "Bash(gh issue create --title 'Módulo Pagos: alertas de morosas en dashboard' --body ':*)",
       "Bash(gh issue create --title 'Módulo Reportes: reporte financiero + operativo + export PDF' --body ':*)",
-      "Bash(gh issue:*)"
+      "Bash(gh issue:*)",
+      "mcp__claude_ai_Supabase__list_projects",
+      "mcp__claude_ai_Supabase__apply_migration"
     ]
   }
 }
