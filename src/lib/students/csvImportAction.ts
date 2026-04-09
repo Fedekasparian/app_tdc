@@ -21,11 +21,33 @@ export async function importCSVStudents(formData: FormData) {
   const raw = formData.get('students') as string
   if (!raw) return { error: 'No hay datos para importar' }
 
-  const students = JSON.parse(raw)
+  const incoming: Record<string, unknown>[] = JSON.parse(raw)
   const supabase = await createClient()
 
+  // Fetch existing student names to detect duplicates
+  const { data: existing, error: fetchError } = await supabase
+    .from('students')
+    .select('full_name')
+
+  if (fetchError) return { error: `Error al conectar con la base de datos: ${fetchError.message}` }
+
+  const existingNames = new Set(
+    (existing ?? []).map(s => String(s.full_name).trim().toLowerCase())
+  )
+
+  const newStudents = incoming.filter(
+    s => !existingNames.has(String(s.full_name ?? '').trim().toLowerCase())
+  )
+  const duplicates = incoming
+    .filter(s => existingNames.has(String(s.full_name ?? '').trim().toLowerCase()))
+    .map(s => String(s.full_name))
+
+  if (newStudents.length === 0) {
+    return { imported: 0, duplicates, skipped_duplicates: duplicates.length }
+  }
+
   const { error } = await supabase.from('students').insert(
-    students.map((s: Record<string, unknown>) => ({
+    newStudents.map(s => ({
       full_name: s.full_name,
       birth_date: s.birth_date ?? null,
       age: s.age ? Number(s.age) : null,
@@ -41,8 +63,8 @@ export async function importCSVStudents(formData: FormData) {
     }))
   )
 
-  if (error) return { error: 'Error al importar. Verificá que no haya duplicados.' }
+  if (error) return { error: `Error al importar: ${error.message}` }
 
   revalidatePath('/students')
-  return { imported: students.length }
+  return { imported: newStudents.length, duplicates, skipped_duplicates: duplicates.length }
 }

@@ -24,6 +24,17 @@ const COLUMN_MAP: Record<string, string> = {
   'cómo accedió a la información':                              'referral_source',
 }
 
+/**
+ * Converts DD/MM/YYYY (Google Forms Spanish locale) to YYYY-MM-DD for Postgres.
+ * If the value is already YYYY-MM-DD or unrecognized, returns it unchanged.
+ */
+function normalizeDateToISO(raw: string): string {
+  const ddmmyyyy = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
+  const m = raw.match(ddmmyyyy)
+  if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`
+  return raw
+}
+
 function stripBOM(str: string): string {
   return str.charCodeAt(0) === 0xfeff ? str.slice(1) : str
 }
@@ -81,6 +92,8 @@ export function rowsFromCSV(buffer: Buffer): RawRow[] {
 
       if (field === 'image_authorization') {
         obj[field] = raw.toLowerCase() === 'si' || raw.toLowerCase() === 'sí'
+      } else if (field === 'birth_date') {
+        obj[field] = raw !== '' ? normalizeDateToISO(raw) : null
       } else {
         obj[field] = raw !== '' ? raw : null
       }

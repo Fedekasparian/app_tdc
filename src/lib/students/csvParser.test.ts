@@ -72,4 +72,20 @@ Bianchi Adrian,2324501588`
     const rows = rowsFromCSV(buffer)
     expect(rows).toHaveLength(0)
   })
+
+  it('converts birth_date from DD/MM/YYYY to YYYY-MM-DD', () => {
+    const csv = `APELLIDO Y NOMBRE,FECHA DE NACIMIENTO
+García Lucía,15/03/1990`
+    const buffer = Buffer.from(csv, 'utf-8')
+    const rows = rowsFromCSV(buffer)
+    expect(rows[0].birth_date).toBe('1990-03-15')
+  })
+
+  it('leaves birth_date unchanged if already ISO format', () => {
+    const csv = `APELLIDO Y NOMBRE,FECHA DE NACIMIENTO
+García Lucía,1990-03-15`
+    const buffer = Buffer.from(csv, 'utf-8')
+    const rows = rowsFromCSV(buffer)
+    expect(rows[0].birth_date).toBe('1990-03-15')
+  })
 })

@@ -16,6 +16,7 @@ export default function ImportStudentsPage() {
   const [preview, setPreview] = useState<PreviewStudent[]>([])
   const [skipped, setSkipped] = useState(0)
   const [imported, setImported] = useState(0)
+  const [duplicates, setDuplicates] = useState<string[]>([])
   const router = useRouter()
 
   async function handleFile(e: React.FormEvent<HTMLFormElement>) {
@@ -57,7 +58,9 @@ export default function ImportStudentsPage() {
       return
     }
 
-    setImported((result as { imported: number }).imported)
+    const r = result as { imported: number; duplicates?: string[] }
+    setImported(r.imported)
+    setDuplicates(r.duplicates ?? [])
     setStep('done')
     setLoading(false)
   }
@@ -66,9 +69,21 @@ export default function ImportStudentsPage() {
     return (
       <div className="space-y-4">
         <h2 className="text-xl font-bold text-gray-900">Importar alumnas</h2>
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 text-center space-y-3">
-          <CheckCircle2 size={40} className="text-green-500 mx-auto" />
-          <p className="text-lg font-semibold text-gray-900">{imported} alumnas importadas</p>
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+          <div className="text-center space-y-2">
+            <CheckCircle2 size={40} className="text-green-500 mx-auto" />
+            <p className="text-lg font-semibold text-gray-900">{imported} alumna{imported !== 1 ? 's' : ''} importada{imported !== 1 ? 's' : ''}</p>
+          </div>
+          {duplicates.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-2">
+              <p className="text-sm font-medium text-amber-800">
+                {duplicates.length} ya existía{duplicates.length !== 1 ? 'n' : ''} y se omitió{duplicates.length !== 1 ? 'eron' : ''}:
+              </p>
+              <ul className="text-sm text-amber-700 list-disc list-inside space-y-0.5">
+                {duplicates.map(name => <li key={name}>{name}</li>)}
+              </ul>
+            </div>
+          )}
           <button
             onClick={() => router.push('/students')}
             className="w-full rounded-xl bg-blue-600 text-white py-3 font-semibold hover:bg-blue-700 transition-colors"
