@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useCart } from '@/lib/cart/useCart'
 import { saveRoutine } from '@/lib/routines/actions'
 import { ChevronUp, ChevronDown, X, Clock, Trash2 } from 'lucide-react'
@@ -12,6 +13,7 @@ export default function CartSheet() {
   const [routineName, setRoutineName] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const router = useRouter()
 
   if (count === 0) return null
 
@@ -22,15 +24,17 @@ export default function CartSheet() {
     formData.set('name', routineName)
     formData.set('items', JSON.stringify(items))
     const result = await saveRoutine(formData)
-    if (result?.errors) {
-      setError(result.errors.name ?? result.errors.items ?? result.errors._ ?? 'Error al guardar')
-      setSaving(false)
+    setSaving(false)
+    if ('errors' in result && result.errors) {
+      const e = result.errors
+      setError(e.name ?? e.items ?? e._ ?? 'Error al guardar')
       return
     }
+    // Éxito: limpiar estado y navegar
     clear()
     setShowModal(false)
     setRoutineName('')
-    setSaving(false)
+    router.push('/routines')
   }
 
   return (

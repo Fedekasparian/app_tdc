@@ -36,7 +36,8 @@ export async function saveRoutine(formData: FormData) {
   if (exError) return { errors: { _: 'Error al guardar los ejercicios' } }
 
   revalidatePath('/routines')
-  redirect('/routines')
+  // No redirect — el client se encarga de navegar para poder actualizar el estado del modal
+  return { success: true as const }
 }
 
 export async function deleteRoutine(id: string) {

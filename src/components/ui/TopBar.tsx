@@ -7,8 +7,8 @@ const titles: Record<string, string> = {
   '/': 'Inicio',
   '/students': 'Alumnas',
   '/exercises': 'Ejercicios',
-  '/classes': 'Clases',
-  '/sessions': 'Sesiones',
+  '/routines': 'Rutinas',
+  '/turnos': 'Turnos',
   '/payments': 'Pagos',
   '/reports': 'Reportes',
 }
@@ -18,7 +18,10 @@ export default function TopBar() {
   const router = useRouter()
   const supabase = createClient()
 
-  const title = titles[pathname] ?? 'TDC'
+  // Match prefix for nested routes (e.g. /turnos/[id] → 'Turnos')
+  const title = titles[pathname]
+    ?? Object.entries(titles).find(([k]) => k !== '/' && pathname.startsWith(k))?.[1]
+    ?? 'TDC'
 
   async function handleLogout() {
     await supabase.auth.signOut()

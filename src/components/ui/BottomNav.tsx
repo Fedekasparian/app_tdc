@@ -9,26 +9,41 @@ import {
   CalendarDays,
   CreditCard,
   BarChart2,
+  ListChecks,
 } from 'lucide-react'
 
-const navItems = [
+// Desktop sidebar muestra todos los items
+const allNavItems = [
   { href: '/',          label: 'Inicio',     icon: Home },
   { href: '/students',  label: 'Alumnas',    icon: Users },
   { href: '/exercises', label: 'Ejercicios', icon: Dumbbell },
-  { href: '/classes',   label: 'Clases',     icon: CalendarDays },
+  { href: '/routines',  label: 'Rutinas',    icon: ListChecks },
+  { href: '/turnos',    label: 'Turnos',     icon: CalendarDays },
   { href: '/payments',  label: 'Pagos',      icon: CreditCard },
   { href: '/reports',   label: 'Reportes',   icon: BarChart2 },
+]
+
+// Mobile bottom bar: solo los 5 más usados
+const mobileNavItems = [
+  { href: '/',          label: 'Inicio',     icon: Home },
+  { href: '/students',  label: 'Alumnas',    icon: Users },
+  { href: '/exercises', label: 'Ejercicios', icon: Dumbbell },
+  { href: '/turnos',    label: 'Turnos',     icon: CalendarDays },
+  { href: '/payments',  label: 'Pagos',      icon: CreditCard },
 ]
 
 export default function BottomNav() {
   const pathname = usePathname()
 
+  const isActive = (href: string) =>
+    href === '/' ? pathname === '/' : pathname.startsWith(href)
+
   return (
     <>
       {/* Mobile: bottom bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-10 bg-white border-t border-gray-200 flex md:hidden">
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href
+        {mobileNavItems.map(({ href, label, icon: Icon }) => {
+          const active = isActive(href)
           return (
             <Link
               key={href}
@@ -51,8 +66,8 @@ export default function BottomNav() {
           <p className="text-xs text-gray-400 mt-0.5">Gestión de clases</p>
         </div>
         <nav className="flex flex-col gap-1 px-3 flex-1">
-          {navItems.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href
+          {allNavItems.map(({ href, label, icon: Icon }) => {
+            const active = isActive(href)
             return (
               <Link
                 key={href}
